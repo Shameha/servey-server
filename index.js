@@ -76,11 +76,59 @@ const verifyToken =(req,res,next)=>{
   // next();
  }
 
-app.get('/users',verifyToken,async(req,res)=>{
+ const verifyAdmin = async (req,res,next) =>{
+  const email = req.decoded.email;
+  const query = {email: email};
+  const user = await usersCollection.findOne(query);
+  const isAdmin = user?.role === 'admin';
+  if(!isAdmin){
+    return res.status(403).send({message:'forbidden access'});
+
+  }
+  next();
+ }
+
+app.get('/users',verifyToken,verifyAdmin,async(req,res)=>{
   console.log(req.headers);
   const result = await usersCollection.find().toArray();
   res.send(result);
 });
+
+app.get('/users/admin/:email',verifyToken,async(req,res)=>{
+
+  const email = req.params.email;
+  if(email !== req.decoded.email){
+    return res.status(403).send({message:"forbidden access"})
+  }
+  const query={email:email};
+  console.log(query);
+  const user = await usersCollection.findOne(query);
+  let admin = false;
+  if(user){
+    admin = user?.role === 'admin';
+    
+  }
+  res.send({ admin })
+
+})
+
+
+// app.get('/users/survey/:email',async(req,res)=>{
+
+//   const email = req.params.email;
+//   if(email !== req.decoded.email){
+//     return res.status(403).send({message:"forbidden access"})
+//   }
+//   const query={email:email};
+//   const user = await usersCollection.findOne(query);
+//   let survey = false;
+//   if(user){
+//     survey = user?.role === 'survey';
+    
+//   }
+//   res.send({ survey })
+
+// })
 
     app.post('/users',async(req,res)=>{
   const user = req.body;
@@ -100,25 +148,24 @@ app.patch('/users/admin/:id',async(req,res)=>{
   const updateDoc ={
     $set:{
       role:'admin',
-      role:'survey'
-            
-
     }
   }
   const result = await usersCollection.updateOne(filter,updateDoc)
   res.send(result);
 })
-// app.patch('/users/survey/:id',async(req,res)=>{
-//   const id = req.params.id;
-//   const filter ={_id: new ObjectId(id)};
-//   const updateDoc ={
-//     $set:{
-//       role:'survey'
-//     }
-//   }
-//   const result = await usersCollection.updateOne(filter,updateDoc)
-//   res.send(result);
-// })
+
+
+app.patch('/users/survey/:id',async(req,res)=>{
+  const id = req.params.id;
+  const filter ={_id: new ObjectId(id)};
+  const updateDoc ={
+    $set:{
+      role:'survey'
+    }
+  }
+  const result = await usersCollection.updateOne(filter,updateDoc)
+  res.send(result);
+})
 
 
 
