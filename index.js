@@ -7,7 +7,15 @@ const port = process.env.PORT || 5000;
 
 
 //middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://assignment12-48a67.web.app",
+      "assignment12-48a67.firebaseapp.com",
+    ]
+  })
+);
 app.use(express.json());
 
 
@@ -26,7 +34,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const surveyCollection = client.db("surveyDb").collection("servey");
     const reviewCollection = client.db("surveyDb").collection("reviews");
     const usersCollection = client.db("surveyDb").collection("users");
@@ -199,7 +207,7 @@ app.get("/reviews",async(req,res)=>{
 })
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
