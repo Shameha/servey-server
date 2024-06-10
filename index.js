@@ -189,7 +189,7 @@ app.get('/servey/:id',async(req,res)=>{
     projection: { title: 1, description: 1 },
   };
   const result = await surveyCollection.findOne(query,options);
-  res.send(result)
+  res.send(result);
 })
 
 
