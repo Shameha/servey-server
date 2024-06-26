@@ -3,18 +3,13 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIP_SECREAT_KEY)
 const port = process.env.PORT || 5000;
 
 
 //middleware
 app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://assignment12-48a67.web.app",
-      "assignment12-48a67.firebaseapp.com",
-    ]
-  })
+  cors()
 );
 app.use(express.json());
 
@@ -38,6 +33,7 @@ async function run() {
     const surveyCollection = client.db("surveyDb").collection("servey");
     const reviewCollection = client.db("surveyDb").collection("reviews");
     const usersCollection = client.db("surveyDb").collection("users");
+    const paymentCollection = client.db("surveyDb").collection("payments");
  
     // const Collection = client.db("surveyDb").collection("reviews");
 
@@ -206,6 +202,27 @@ app.get("/reviews",async(req,res)=>{
   res.send(result)
 })
 
+app.post('/create-payment-intent',async(req,res)=>{
+const {price} = req.body;
+const amount = parseInt(price * 100);
+
+const paymentIntent = await stripe.paymentIntent.create({
+  amount: amount,
+  currency:'usd',
+  payment_method_type :[card]
+});
+res.send({
+  clientSecret : paymentIntent.client_secret
+})
+
+})
+
+app.post('/payments',async(req,res)=>{
+  const payment = req.body;
+  const paymentResult = await paymentCollection.insertOne(payment);
+  console.log('payment result',payment);
+  res.send(paymentResult)
+})
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -219,7 +236,7 @@ run().catch(console.dir);
 
 
 app.get('/',(req,res)=>{
-    res.send('surver is sitting');
+    res.send("surver is sitting");
 })
 
 app.listen(port,() =>{
